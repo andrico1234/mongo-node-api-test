@@ -7,7 +7,6 @@ const {Todo} = require('./models/todo');
 const {User} = require('./models/user');
 
 var app = express();
-//var id = '58dfe4451e510a3e2fb9c78d';
 
 app.use(bodyParser.json());
 
@@ -65,10 +64,7 @@ app.get('/todos/:id', (req, res) => {
     }).catch((err) => {
 
         res.status(400).send();
-    })
-    // if no to-do 404 and send back empty body
-
-    // fail - error 400 and .send()
+    });
 });
 
 app.listen(3000, () => {
