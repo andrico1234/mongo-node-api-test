@@ -4,8 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node server/server.js",
     "test": "jasmine-node server --verbose",
     "test-watch": "nodemon --exec \"npm test\""
+  },
+  "engines": {
+    "node": "6.9.5"
   },
   "author": "",
   "license": "ISC",
