@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node server/server.js",
-    "test": "jasmine-node server --verbose",
+    "test": "export NODE_ENV=test && jasmine-node server --verbose",
     "test-watch": "nodemon --exec \"npm test\""
   },
   "engines": {
