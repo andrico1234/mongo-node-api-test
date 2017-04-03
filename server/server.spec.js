@@ -9,6 +9,8 @@ const todos = [{
     text: 'First test todo'
 }, {
     _id: new ObjectID,
+    completed: true,
+    completedAt: 333,
     text: 'Second test todo'
 }];
 
@@ -162,5 +164,42 @@ describe('DELETE /todos/:id', () => {
             .get(`/todos/123123`)
             .expect(400)
             .end(done)
+    });
+});
+
+describe('PATCH /todos/:id', () => {
+
+    it('should set completed to true and add timestamp', (done) => {
+
+        request(app)
+            .patch(`/todos/${todos[0]._id.toHexString()}`)
+            .send({
+                completed: true,
+                text: 'huge todo'
+            })
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.todo.completed).toBe(true);
+                expect(res.body.todo.completedAt).toBeTruthy();
+                expect(res.body.todo.text).toBe('huge todo');
+            })
+            .end(done);
+    });
+
+    it('should set completed to false and remove timestamp', (done) => {
+
+    request(app)
+        .patch(`/todos/${todos[1]._id.toHexString()}`)
+        .send({
+            completed: false,
+            text: 'huger todo'
+        })
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.todo.completed).toBe(false);
+            expect(res.body.todo.completedAt).toBe(null);
+            expect(res.body.todo.text).toBe('huger todo');
+        })
+        .end(done);
     });
 });
