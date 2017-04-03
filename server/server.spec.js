@@ -47,8 +47,8 @@ describe('POST /todos', () => {
 
                         expect(todos.length).toBe(1);
                         expect(todos[0].text).toBe(text);
-                        done().catch((e) => done(e));
-                    })
+                        done();
+                    }).catch((e) => done(e));
                 }
             });
     });
@@ -69,8 +69,8 @@ describe('POST /todos', () => {
                     Todo.find().then((todos) => {
 
                         expect(todos.length).toBe(2);
-                        done().catch((e) => done(e))
-                    })
+                        done();
+                    }).catch((e) => done(e));
                 }
             })
     })
@@ -90,7 +90,7 @@ describe('GET /todos', () => {
     })
 });
 
-describe('GET /todos/id', () => {
+describe('GET /todos/:id', () => {
 
     it('should get todos by ID', (done) => {
 
@@ -116,6 +116,50 @@ describe('GET /todos/id', () => {
 
         request(app)
             .get(`/todos/12323`)
+            .expect(400)
+            .end(done)
+    });
+});
+
+describe('DELETE /todos/:id', () => {
+
+    it('should delete todos by ID', (done) => {
+
+        request(app)
+            .delete(`/todos/${todos[0]._id.toHexString()}`)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.todo.text).toBe(todos[0].text);
+            })
+            .end((err, res) => {
+
+                if (err) {
+
+                    return done(err);
+                } else {
+
+                    Todo.findById(todos[0]._id.toHexString()).then((todos) => {
+
+                        expect(todos).toEqual(null);
+                        done();
+                    }).catch((err) => done(err));
+                }
+            });
+    });
+
+    it('should return 404 if todo not found', (done) => {
+        var newId = new ObjectID().toHexString();
+
+        request(app)
+            .get(`/todos${newId}`)
+            .expect(404)
+            .end(done)
+    });
+
+    it('should return 400 if ID is invalid', (done) => {
+
+        request(app)
+            .get(`/todos/123123`)
             .expect(400)
             .end(done)
     });
