@@ -10,15 +10,14 @@ const {Todo} = require('./models/todo');
 const {User} = require('./models/user');
 const {authenticate} = require('./middleware/authenticate');
 
-var app = express();
+let app = express();
 const port = process.env.PORT;
 
 app.use(bodyParser.json());
 
 app.post('/todos', authenticate, (req, res) => {
 
-    var todo = new Todo({
-
+    const todo = new Todo({
         text: req.body.text,
         completed: req.body.completed,
         completedAt: req.body.completedAt,
@@ -49,7 +48,7 @@ app.get('/todos', authenticate, (req, res) => {
 
 app.get('/todos/:id', authenticate, (req, res) => {
 
-    let id = req.params.id;
+    const id = req.params.id;
 
     if (!ObjectID.isValid(id)) {
 
@@ -73,19 +72,21 @@ app.get('/todos/:id', authenticate, (req, res) => {
     });
 });
 
-app.delete('/todos/:id', authenticate, (req, res) => {
+app.delete('/todos/:id', authenticate, async (req, res) => {
 
-    let id = req.params.id;
+    const id = req.params.id;
 
     if (!ObjectID.isValid(id)) {
 
         return res.status(400).send()
     }
 
-    Todo.findOneAndRemove({
-        _id: id,
-        _creator: req.user._id
-    }).then((todo) => {
+    try {
+
+        const todo = await Todo.findOneAndRemove({
+            _id: id,
+            _creator: req.user._id
+        });
 
         if (!todo) {
 
@@ -93,16 +94,16 @@ app.delete('/todos/:id', authenticate, (req, res) => {
         }
 
         res.send({todo});
-    }).catch((err) => {
+    } catch (err) {
 
-        res.status(400).send();
-    });
+        res.status(400).send(err);
+    }
 });
 
 app.patch('/todos/:id', authenticate, (req, res) => {
 
-    let id = req.params.id;
-    var body = _.pick(req.body, ['text', 'completed']);
+    const id = req.params.id;
+    const body = _.pick(req.body, ['text', 'completed']);
 
     if (!ObjectID.isValid(id)) {
 
@@ -140,21 +141,18 @@ app.patch('/todos/:id', authenticate, (req, res) => {
     });
 });
 
-app.post('/users', (req, res) => {
+app.post('/users', async (req, res) => {
 
-    var body = _.pick(req.body, ['email', 'password']);
-    var user = new User(body);
+    const body = _.pick(req.body, ['email', 'password']);
+    const user = new User(body);
 
-    user.save().then(() => {
-
-        return user.generateAuthToken();
-    }).then((token) => {
-
+    try {
+        await user.save();
+        const token = await user.generateAuthToken();
         res.header('x-auth', token).send(user);
-    }).catch((err) => {
-
+    } catch (err) {
         res.status(400).send(err);
-    });
+    }
 });
 
 app.get('/users/me', authenticate, (req, res) => {
@@ -162,31 +160,27 @@ app.get('/users/me', authenticate, (req, res) => {
     res.send(req.user);
 });
 
-app.post('/users/login', (req, res) => {
+app.post('/users/login', async (req, res) => {
 
-    var body = _.pick(req.body, ['email', 'password']);
+    const body = _.pick(req.body, ['email', 'password']);
 
-    User.findByCredentials(body.email, body.password).then((user) => {
-
-        return user.generateAuthToken().then((token) => {
-
-            res.header('x-auth', token).send(user);
-        });
-    }).catch((err) => {
-
+    try {
+        const user = await User.findByCredentials(body.email, body.password);
+        const token = await user.generateAuthToken();
+        res.header('x-auth', token).send(user);
+    } catch (err) {
         res.status(400).send(err);
-    });
+    }
 });
 
-app.delete('/users/me/token', authenticate, (req, res) => {
+app.delete('/users/me/token', authenticate, async (req, res) => {
 
-    req.user.removeToken(req.token).then(() => {
-
+    try {
+        await req.user.removeToken(req.token);
         res.status(200).send();
-    }, () => {
-
+    } catch (e) {
         res.status(400).send();
-    });
+    }
 });
 
 app.listen(port, () => {
@@ -195,6 +189,5 @@ app.listen(port, () => {
 });
 
 module.exports = {
-
     app
 };
